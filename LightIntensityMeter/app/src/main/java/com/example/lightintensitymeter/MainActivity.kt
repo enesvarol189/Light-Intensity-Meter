@@ -30,7 +30,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         light = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
         setContent {
             LightIntensityMeterTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     GetValue(lightIntensity.value)
                 }
@@ -57,13 +56,12 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     }
 
     override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
-        // Handle changes in sensor accuracy here
     }
 }
 
 @Composable
 fun GetValue(lightIntensity: Float) {
-    Text("Light Intensity: ${lightIntensity}")  // Use the state variable here
+    Text("Light Intensity: ${lightIntensity}")
 }
 
 @Composable
