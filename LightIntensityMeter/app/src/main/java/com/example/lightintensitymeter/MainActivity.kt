@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,6 +19,18 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import androidx.compose.runtime.mutableStateOf
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.StrokeCap
+
 
 class MainActivity : ComponentActivity(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
@@ -31,7 +44,9 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         setContent {
             LightIntensityMeterTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    GetValue(lightIntensity.value)
+                    // GetValue(lightIntensity.value)
+                    // LightMeterPreview()
+                    LightMeter(lightIntensity.value)
                 }
             }
         }
@@ -56,26 +71,65 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     }
 
     override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
+        
     }
 }
 
-@Composable
-fun GetValue(lightIntensity: Float) {
-    Text("Light Intensity: ${lightIntensity}")
-}
+// @Composable
+// fun GetValue(lightIntensity: Float) {
+//     Text("Light Intensity: ${lightIntensity}") 
+// }
+
+// @Composable
+// fun Greeting(name: String, modifier: Modifier = Modifier) {
+//     Text(
+//             text = "Hello $name!",
+//             modifier = modifier
+//     )
+// }
+
+// @Preview(showBackground = true)
+// @Composable
+// fun GreetingPreview() {
+//     LightIntensityMeterTheme {
+//         Greeting("Android")
+//     }
+// }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-            text = "Hello $name!",
-            modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    LightIntensityMeterTheme {
-        Greeting("Android")
+fun LightMeter(lightIntensity: Float) {
+    val progress = lightIntensity / 40000f
+    val color = when {
+        lightIntensity < 10000 -> Color.Green
+        lightIntensity < 30000 -> Color(0xFFFFA500)
+        else -> Color.Red
     }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5DEB3)),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            progress = progress,
+            color = color,
+            trackColor = Color.Green,
+            strokeWidth = 16.dp,
+            strokeCap = StrokeCap.Round,
+            modifier = Modifier.size(200.dp)
+            // modifier = Modifier.padding(6.dp)
+        )
+        Text(
+            text = "${lightIntensity.toInt()} lux",
+            style = MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Preview
+@Composable
+fun LightMeterPreview() {
+    LightMeter(20000f)
 }
