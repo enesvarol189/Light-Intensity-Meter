@@ -63,7 +63,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.launch
+
 
 class MainActivity : ComponentActivity(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
@@ -124,7 +128,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
 // @Composable
 // fun GetValue(lightIntensity: Float) {
-//     Text("Light Intensity: ${lightIntensity}")  // Use the state variable here
+//     Text("Light Intensity: ${lightIntensity}")
 // }
 
 // @Composable
@@ -143,111 +147,174 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 //     }
 // }
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LightMeter(lightIntensity: Float, textToSpeech: TextToSpeech) {
     val progress = lightIntensity / 25000f
-    val color = lerpColorMy(Color.Yellow, Color.Red, progress)
+    val color = lerpColorMy(Color(0xff94c6ff), Color(0xff140c82), progress)
+    val currentLanguage = remember { mutableStateOf("EN") }
+    var previousLanguage = remember { currentLanguage.value }
+    LaunchedEffect(currentLanguage.value) {
+        if (previousLanguage != currentLanguage.value) {
+            previousLanguage = currentLanguage.value
+        }
+    }
+    val lightStateSpeech = when {
+        lightIntensity < 1000 ->
+            if (currentLanguage.value == "EN") "Illumination is insufficient" else "Aydınlatma yetersiz"
+        lightIntensity < 10000 ->
+            if (currentLanguage.value == "EN") "Illumination is just right" else "Aydınlatma yeterli"
+        else ->
+            if (currentLanguage.value == "EN") "Illumination is excessive" else "Aydınlatma aşırı"
+    }
     val lightState = when {
-        lightIntensity < 1000 -> "Not enough"
-        lightIntensity < 10000 -> "Just enough"
-        else -> "Too much"
+        lightIntensity < 1000 ->
+            if (currentLanguage.value == "EN") "insufficient" else "yetersiz"
+        lightIntensity < 10000 ->
+            if (currentLanguage.value == "EN") "just right" else "yeterli"
+        else ->
+            if (currentLanguage.value == "EN") "excessive" else "aşırı"
     }
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val lightIntensityPrompt = if (currentLanguage.value == "EN") "Luminous intensity is " else "Işık şiddeti "
+    // val drawerState = rememberDrawerState(DrawerValue.Closed)
+    // val scope = rememberCoroutineScope()
 
+    // Scaffold(
+    //     content = { paddingValues ->
+    //         Column(modifier = Modifier.padding(paddingValues)) {
+    //             TopAppBar(
+    //                 title = { Text("Light Intensity Meter") },
+    //                 navigationIcon = {
+    //                     IconButton(onClick = {
+    //                         scope.launch {
+    //                             if (drawerState.isClosed) {
+    //                                 textToSpeech.speak(drawerState.currentValue.toString(), TextToSpeech.QUEUE_FLUSH, null, "") }
 
-    Scaffold(
-        content = {
-            List(5) { index ->
-                Text("Room ${index + 1}: ${getRecommendedLightLevel(index)} lux")
-            }
-        },
-        topBar = {
-            TopAppBar(
-                title = { Text("") },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        val scope = rememberCoroutineScope()
-                        scope.launch {
-                            drawerState.open()
+    //                             else if (drawerState.isOpen) {
+    //                                 textToSpeech.speak(drawerState.isOpen.toString(),TextToSpeech.QUEUE_FLUSH, null, "")
+    //                                 drawerState.close() }
+    //                         }
+    //                     }) {
+    //                         Icon(Icons.Filled.Menu, contentDescription = "Open Navigation Drawer")
+    //                     }
+    //                 }
+    //             )
 
-                        }
-                    }) {
-                        Icon(Icons.Filled.Menu, contentDescription = "Menu")
-                    }
-                }
-            )
-        }
-    )
+    //             ModalDrawerSheet(
+    //                 drawerContainerColor = Color.LightGray,
+    //                 drawerContentColor = Color.Black,
+    //                 content = {
+    //                     Column(modifier = Modifier.fillMaxSize()) {
+    //                         List(5) { index ->
+    //                             Text(
+    //                                 text = "Room ${index + 1}: ${getRecommendedLightLevel(index)} lux",
+    //                                 modifier = Modifier.padding(16.dp)
+    //                             )
+    //                         }
+    //                     }
+    //                 }
+    //             )
+    //         }
+    //     }
+    // )
 
-
-    Box(
-        modifier = Modifier,
-        contentAlignment = Alignment.TopEnd
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+    Surface(color = Color(0xff363636)) {
+        Box(
+            modifier = Modifier,
+            contentAlignment = Alignment.TopEnd
         ) {
-            Button(onClick = {
-                textToSpeech.speak(lightState, TextToSpeech.QUEUE_FLUSH, null, "")
-            }) {
-                Text("Speak Light State", color = Color.Black)
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = {
-                val lightLevel = "${lightIntensity.toInt()} lux"
-                textToSpeech.speak(lightLevel, TextToSpeech.QUEUE_FLUSH, null, "")
-            }) {
-                Text("Speak Light Level", color = Color.Black)
-            }
-        }
-    }
-
-    Box(
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                CircularProgressIndicator(
-                    progress = progress,
-                    color = color,
-                    trackColor = Color.Green,
-                    strokeWidth = 16.dp,
-                    strokeCap = StrokeCap.Round,
-                    modifier = Modifier.size(200.dp)
-                )
-                Text(
-                    text = "${lightIntensity.toInt()} lux",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        color = Color.Blue,
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Serif
-                    ),
-                    textAlign = TextAlign.Center
-                )
+                Button(onClick = {
+                    if (currentLanguage.value == "EN") {
+                        currentLanguage.value = "TR"
+                        textToSpeech.language = Locale.forLanguageTag("tr-TR")
+                    } else {
+                        currentLanguage.value = "EN"
+                        textToSpeech.language = Locale.ENGLISH
+                    }
+                }) {
+                    Text(currentLanguage.value, color = Color.White)
+                }
+                Spacer(modifier = Modifier.width(52.dp))
+                Button(onClick = {
+                    textToSpeech.speak(lightStateSpeech, TextToSpeech.QUEUE_FLUSH, null, "")
+                }) {
+                    val buttonText = if (currentLanguage.value == "EN") " Light State " else "Işık Durumu"
+                    Text(buttonText, color = Color.White)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(onClick = {
+                    textToSpeech.speak(lightIntensityPrompt + "${lightIntensity.toInt()} lux", TextToSpeech.QUEUE_FLUSH, null, "")
+                }) {
+                    val buttonText = if (currentLanguage.value == "EN") " Light  Level " else "Işık Seviyesi"
+                    Text(buttonText, color = Color.White)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
             }
-            val backgroundColor = when {
-                lightIntensity < 1000 -> Color.Red
-                lightIntensity < 10000 -> Color.Yellow
-                else -> Color.Green
+        }
+
+        Box(
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        progress = progress,
+                        color = color,
+                        trackColor = Color.Gray,
+                        strokeWidth = 16.dp,
+                        strokeCap = StrokeCap.Round,
+                        modifier = Modifier.size(200.dp)
+                    )
+                    Text(
+                        text = "${lightIntensity.toInt()} lux",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            color = Color(0xff6b6899),
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Serif
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                }
+                val backgroundColor = when {
+                    lightIntensity < 1000 -> Color(0xff59cfc5)
+                    lightIntensity < 10000 -> Color(0xffc7cf59)
+                    else -> Color(0xffcf5959)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier
+                        .width(120.dp)
+                        .background(color = backgroundColor, shape = RoundedCornerShape(10.dp))
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = lightState,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Serif
+                        ),
+                        color = Color.Black
+                    )
+                }
             }
+        }
+
+        Box(
+            contentAlignment = Alignment.BottomEnd
+        ) {
             Text(
-                text = lightState,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Serif
-                ),
-                color = Color.Black,
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .background(color = backgroundColor, shape = RoundedCornerShape(10.dp))
-                    .padding(16.dp)
+                text = if (currentLanguage.value == "EN") "made by Enes Varol" else "Enes Varol tarafından yapıldı",
+                fontSize = 12.sp,
+                color = Color.LightGray,
+                modifier = Modifier.padding(bottom = 8.dp, end = 8.dp)
             )
         }
     }
@@ -259,10 +326,8 @@ fun LightMeterPreview() {
     LightMeter(20000f, TextToSpeech(null) {})
 }
 
-
-
 fun lerpColorMy(start: Color, stop: Color, fraction: Float): Color {
-    return androidx.compose.ui.graphics.lerp(start, stop, fraction)
+    return lerp(start, stop, fraction)
 }
 
 fun getRecommendedLightLevel(roomIndex: Int): Int {
