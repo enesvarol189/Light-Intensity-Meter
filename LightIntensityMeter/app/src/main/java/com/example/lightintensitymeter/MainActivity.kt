@@ -174,6 +174,12 @@ fun LightMeter(lightIntensity: Float, textToSpeech: TextToSpeech) {
         else ->
             if (currentLanguage.value == "EN") "excessive" else "aşırı"
     }
+    val lightStatusMessage = when {
+        lightIntensity < 10 ->
+            if (currentLanguage.value == "EN") "Lights are off" else "Işık kapalı"
+        else ->
+            if (currentLanguage.value == "EN") "Lights are on" else "Işık açık"
+    }
     val lightIntensityPrompt = if (currentLanguage.value == "EN") "Luminous intensity is " else "Işık şiddeti "
     // val drawerState = rememberDrawerState(DrawerValue.Closed)
     // val scope = rememberCoroutineScope()
@@ -219,38 +225,55 @@ fun LightMeter(lightIntensity: Float, textToSpeech: TextToSpeech) {
 
     Surface(color = Color(0xff363636)) {
         Box(
-            modifier = Modifier,
+            modifier = Modifier.padding(top = 6.dp, start = 6.dp),
+            contentAlignment = Alignment.TopStart
+        ) {
+            Button(onClick = {
+                if (currentLanguage.value == "EN") {
+                    currentLanguage.value = "TR"
+                    textToSpeech.language = Locale.forLanguageTag("tr-TR")
+                } else {
+                    currentLanguage.value = "EN"
+                    textToSpeech.language = Locale.ENGLISH
+                }
+            }) {
+                Text(currentLanguage.value, color = Color.White)
+            }
+        }
+
+        Box(
+            modifier = Modifier.padding(top = 6.dp, end = 6.dp),
             contentAlignment = Alignment.TopEnd
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Button(onClick = {
-                    if (currentLanguage.value == "EN") {
-                        currentLanguage.value = "TR"
-                        textToSpeech.language = Locale.forLanguageTag("tr-TR")
-                    } else {
-                        currentLanguage.value = "EN"
-                        textToSpeech.language = Locale.ENGLISH
-                    }
-                }) {
-                    Text(currentLanguage.value, color = Color.White)
-                }
-                Spacer(modifier = Modifier.width(52.dp))
-                Button(onClick = {
-                    textToSpeech.speak(lightStateSpeech, TextToSpeech.QUEUE_FLUSH, null, "")
-                }) {
-                    val buttonText = if (currentLanguage.value == "EN") " Light State " else "Işık Durumu"
+                        textToSpeech.speak(lightStatusMessage, TextToSpeech.QUEUE_FLUSH, null, "")
+                    },
+                    modifier = Modifier.width(128.dp)
+                ) {
+                    val buttonText = if (currentLanguage.value == "EN") "Light On/Off" else "Işık Açık mı"
                     Text(buttonText, color = Color.White)
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.height(1.dp))
                 Button(onClick = {
-                    textToSpeech.speak(lightIntensityPrompt + "${lightIntensity.toInt()} lux", TextToSpeech.QUEUE_FLUSH, null, "")
-                }) {
-                    val buttonText = if (currentLanguage.value == "EN") " Light  Level " else "Işık Seviyesi"
+                        textToSpeech.speak(lightStateSpeech, TextToSpeech.QUEUE_FLUSH, null, "")
+                    },
+                    modifier = Modifier.width(128.dp)
+                ) {
+                    val buttonText = if (currentLanguage.value == "EN") "Light State" else "Işık Durumu"
                     Text(buttonText, color = Color.White)
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.height(1.dp))
+                Button(onClick = {
+                        textToSpeech.speak(lightIntensityPrompt + "${lightIntensity.toInt()} lux", TextToSpeech.QUEUE_FLUSH, null, "")
+                    },
+                    modifier = Modifier.width(128.dp)
+                ) {
+                    val buttonText = if (currentLanguage.value == "EN") "Light  Level" else "Işık Seviyesi"
+                    Text(buttonText, color = Color.White)
+                }
             }
         }
 
