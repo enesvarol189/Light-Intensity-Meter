@@ -1,6 +1,5 @@
 package com.example.lightintensitymeter
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,8 +23,6 @@ import androidx.compose.runtime.mutableStateOf
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -35,38 +32,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.remember
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Path
 import androidx.compose.foundation.layout.Column
 import java.util.Locale
 import androidx.compose.material3.Button
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.DrawerValue
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.runtime.LaunchedEffect
-import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity(), SensorEventListener {
@@ -149,7 +125,12 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
 @Composable
 fun LightMeter(lightIntensity: Float, textToSpeech: TextToSpeech) {
-    val progress = lightIntensity / 25000f
+    val lightOff = 5f
+    val lightInsufficient = 50f
+    val lightSufficient = 1000f
+    val lightExcessive = 2500f
+
+    val progress = if (lightIntensity < 2500f) lightIntensity / lightExcessive else 1f
     val color = lerpColorMy(Color(0xff94c6ff), Color(0xff140c82), progress)
     val currentLanguage = remember { mutableStateOf("EN") }
     var previousLanguage = remember { currentLanguage.value }
@@ -159,23 +140,23 @@ fun LightMeter(lightIntensity: Float, textToSpeech: TextToSpeech) {
         }
     }
     val lightStateSpeech = when {
-        lightIntensity < 1000 ->
+        lightIntensity < lightInsufficient ->
             if (currentLanguage.value == "EN") "Illumination is insufficient" else "Aydınlatma yetersiz"
-        lightIntensity < 10000 ->
+        lightIntensity < lightSufficient ->
             if (currentLanguage.value == "EN") "Illumination is just right" else "Aydınlatma yeterli"
         else ->
             if (currentLanguage.value == "EN") "Illumination is excessive" else "Aydınlatma aşırı"
     }
     val lightState = when {
-        lightIntensity < 1000 ->
+        lightIntensity < lightInsufficient ->
             if (currentLanguage.value == "EN") "insufficient" else "yetersiz"
-        lightIntensity < 10000 ->
+        lightIntensity < lightSufficient ->
             if (currentLanguage.value == "EN") "just right" else "yeterli"
         else ->
             if (currentLanguage.value == "EN") "excessive" else "aşırı"
     }
     val lightStatusMessage = when {
-        lightIntensity < 10 ->
+        lightIntensity < lightOff ->
             if (currentLanguage.value == "EN") "Lights are off" else "Işık kapalı"
         else ->
             if (currentLanguage.value == "EN") "Lights are on" else "Işık açık"
@@ -306,8 +287,8 @@ fun LightMeter(lightIntensity: Float, textToSpeech: TextToSpeech) {
                     )
                 }
                 val backgroundColor = when {
-                    lightIntensity < 1000 -> Color(0xff59cfc5)
-                    lightIntensity < 10000 -> Color(0xffc7cf59)
+                    lightIntensity < lightInsufficient -> Color(0xff59cfc5)
+                    lightIntensity < lightSufficient -> Color(0xffc7cf59)
                     else -> Color(0xffcf5959)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -346,7 +327,7 @@ fun LightMeter(lightIntensity: Float, textToSpeech: TextToSpeech) {
 @Preview
 @Composable
 fun LightMeterPreview() {
-    LightMeter(20000f, TextToSpeech(null) {})
+    LightMeter(1500f, TextToSpeech(null) {})
 }
 
 fun lerpColorMy(start: Color, stop: Color, fraction: Float): Color {
